@@ -1,0 +1,2 @@
+id,name,address,phone,working_days,opening_time,closing_time,assistant_name,comments_enabled
+LAB-001,MITOCHRONAI LAB,"Floor 5, Wing B, Destiny Tower, Sesame Street",0800 000 0000,Mon-Sat,08:00,18:00,Gaya,false

@@ -1,0 +1,4 @@
+id,lab_id,display_name,role
+STF-001,LAB-001,Chief Sct. Gram Stain,chief_scientist
+STF-002,LAB-001,Sct. Taenia solium,scientist
+STF-003,LAB-001,Sct. Creatinin Jaffe,scientist

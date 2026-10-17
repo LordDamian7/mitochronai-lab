@@ -1,0 +1,13 @@
+id,lab_id,lab_patient_id,full_name,sex,date_of_birth,email,phone,risk_factors
+PAT-001,LAB-001,MCA-2026-0001,John Doe,M,1965-06-17,john.doe@example.com,0800 000 0001,
+PAT-002,LAB-001,MCA-2026-0002,Filip Joshua,M,1990-11-28,filip.joshua@example.com,0800 000 0002,
+PAT-003,LAB-001,MCA-2026-0003,Jon Snow,M,1964-04-20,jon.snow@example.com,0800 000 0003,
+PAT-004,LAB-001,MCA-2026-0004,Primus Baker,M,1997-09-14,primus.baker@example.com,0800 000 0004,
+PAT-005,LAB-001,MCA-2026-0005,Jane Doe,F,1994-09-27,jane.doe@example.com,0800 000 0005,
+PAT-006,LAB-001,MCA-2026-0006,Amara Sample,F,2004-08-25,amara.sample@example.com,0800 000 0006,
+PAT-007,LAB-001,MCA-2026-0007,Tunde Placebo,M,1995-08-08,tunde.placebo@example.com,0800 000 0007,
+PAT-008,LAB-001,MCA-2026-0008,Kemi Control,F,1958-10-03,kemi.control@example.com,0800 000 0008,recent_TB_contact
+PAT-009,LAB-001,MCA-2026-0009,Bayo Reagent,M,1965-05-27,bayo.reagent@example.com,0800 000 0009,
+PAT-010,LAB-001,MCA-2026-0010,Ifeoma Pipette,F,1964-08-01,ifeoma.pipette@example.com,0800 000 0010,
+PAT-011,LAB-001,MCA-2026-0011,Chidi Centrifuge,M,2001-08-22,chidi.centrifuge@example.com,0800 000 0011,
+PAT-012,LAB-001,MCA-2026-0012,Zainab Cuvette,F,1978-04-13,zainab.cuvette@example.com,0800 000 0012,

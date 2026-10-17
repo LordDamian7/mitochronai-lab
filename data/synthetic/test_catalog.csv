@@ -1,0 +1,19 @@
+code,name,department,specimen,result_type,unit,ref_low,ref_high,ref_sex,ref_text,ref_source,calc_formula
+FBG,Fasting Blood Glucose,Clinical Chemistry,Fluoride plasma,numeric,mmol/L,3.9,6.0,,3.9-6.0 mmol/L,WHO,
+TC,Total Cholesterol,Clinical Chemistry,Serum,numeric,mmol/L,,5.2,,< 5.2 mmol/L desirable,NCEP ATP III,
+HDL,HDL Cholesterol,Clinical Chemistry,Serum,numeric,mmol/L,1.0,,,>= 1.0 mmol/L (>= 1.55 protective),NCEP ATP III,
+TG,Triglycerides,Clinical Chemistry,Serum,numeric,mmol/L,,1.7,,< 1.7 mmol/L,NCEP ATP III,
+LDL,LDL Cholesterol,Clinical Chemistry,Serum,numeric,mmol/L,,2.6,,< 2.6 mmol/L optimal,NCEP ATP III,friedewald_mmol
+TCHDL,TC / HDL ratio,Clinical Chemistry,Serum,numeric,ratio,,5.0,,< 5.0,Lab-validated,tc_over_hdl
+HB,Haemoglobin,Haematology,EDTA whole blood,numeric,g/dL,12.0,15.5,F,12.0-15.5 g/dL,Lab-validated,
+HB,Haemoglobin,Haematology,EDTA whole blood,numeric,g/dL,13.0,17.0,M,13.0-17.0 g/dL,Lab-validated,
+PCV,Packed Cell Volume,Haematology,EDTA whole blood,numeric,%,36,46,F,36-46 %,Lab-validated,
+PCV,Packed Cell Volume,Haematology,EDTA whole blood,numeric,%,40,50,M,40-50 %,Lab-validated,
+WBC,White Cell Count,Haematology,EDTA whole blood,numeric,x10^9/L,4.0,10.0,,4.0-10.0 x10^9/L,Lab-validated,
+PLT,Platelets,Haematology,EDTA whole blood,numeric,x10^9/L,150,410,,150-410 x10^9/L,Lab-validated,
+MAL,Malaria RDT,Parasitology,EDTA whole blood,qualitative,,,,,Negative,WHO,
+BG,Blood Group (ABO/RhD),Blood Bank,EDTA whole blood,text,,,,,Report ABO group and RhD type,,
+HPSA,H. pylori Stool Antigen,Microbiology,Stool,qualitative,,,,,Negative,,
+HPIGG,H. pylori Antibody (IgG),Serology,Serum,qualitative,,,,,Negative,,
+FIT,Faecal Immunochemical Test,Clinical Chemistry,Stool,qualitative,,,,,Negative,,
+MANTOUX,Tuberculin Skin Test (Mantoux),Immunology,Intradermal,numeric,mm,,,,< 10 mm negative (>= 5 mm if high-risk),CDC/WHO,

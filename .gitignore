@@ -1,0 +1,13 @@
+# Secrets and local config
+.env
+.env.*
+config.local.*
+# Never commit real patient data. Only data/synthetic/ is allowed.
+data/*
+!data/synthetic/
+# Python and OS clutter
+__pycache__/
+*.pyc
+~$*
+.DS_Store
+Thumbs.db
