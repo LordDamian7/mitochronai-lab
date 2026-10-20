@@ -1,0 +1,27 @@
+{
+  "note": "TEST LOGINS for the synthetic demo lab only. Never reuse these anywhere. Delete var/mitochronai.db to re-seed after changing them.",
+  "users": [
+    {
+      "staff_id": "STF-001",
+      "username": "gram.stain",
+      "password": "w_rpa9Mxi2Y-"
+    },
+    {
+      "staff_id": "STF-002",
+      "username": "taenia.solium",
+      "password": "k2vivq36m4Aa"
+    },
+    {
+      "staff_id": "STF-003",
+      "username": "creatinin.jaffe",
+      "password": "7v_x0fD0KfHt"
+    },
+    {
+      "staff_id": "STF-900",
+      "username": "lab.admin",
+      "password": "PQVoX9Fq3PaN",
+      "display_name": "Lab Administrator",
+      "role": "admin"
+    }
+  ]
+}
