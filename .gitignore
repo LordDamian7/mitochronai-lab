@@ -11,3 +11,7 @@ __pycache__/
 ~$*
 .DS_Store
 Thumbs.db
+
+# Signed update packages (built for USB; never committed)
+dist-updates/
+*.mlup
