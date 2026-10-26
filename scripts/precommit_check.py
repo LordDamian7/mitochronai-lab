@@ -30,10 +30,13 @@ def main():
         if path == "scripts/precommit_check.py":
             continue
         try:
-            text = subprocess.check_output(["git", "show", f":{path}"], stderr=subprocess.DEVNULL).decode("utf-8", "ignore")
+            data = subprocess.check_output(["git", "show", f":{path}"], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             continue
-        for m in EMAIL.finditer(text):
+        text = data.decode("utf-8", "ignore")
+        # Binary files (fonts, images) contain random byte runs that look like addresses; only text can hold a real one.
+        is_binary = b"\0" in data[:8192]
+        for m in ([] if is_binary else EMAIL.finditer(text)):
             domain = m.group(1).lower()
             # Reserved domains (RFC 2606) can never deliver mail to anyone.
             if domain not in ALLOWED_DOMAINS and not domain.endswith((".test", ".invalid", ".example")):
