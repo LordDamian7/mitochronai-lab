@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
-// Fonts are downloaded at build time and served by the lab server, so the app works offline.
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-plex-sans" });
-const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-plex-mono" });
+// Fonts are bundled in public/fonts (see globals.css): the app builds and runs with no internet, which offline USB updates need.
 
 export const metadata: Metadata = {
   title: { default: "MitochronAi Lab", template: "%s · MitochronAi Lab" },
@@ -14,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-GB" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en-GB">
       <body>{children}</body>
     </html>
   );
