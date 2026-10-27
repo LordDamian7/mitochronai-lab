@@ -1,0 +1,751 @@
+<meta charset="utf-8">
+<title>MitochronAi Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Didact+Gothic&family=Carlito:wght@400;700&display=swap">
+<style>
+/* Layout: teal side rail + working area; one screen at a time; record drawer slides over on the right. */
+:root{
+  --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#F0F3F2; --line:#DCE3E0; --line-soft:#EDF1EF;
+  --fg:#15211F; --fg-2:#3C4946; --muted:#55625F;
+  --rail:#10302C; --rail-fg:#E4EEEB; --rail-muted:#B5C9C3; --rail-active:#1D4A44;
+  --accent:#0E6B63; --accent-fg:#FFFFFF; --accent-soft:#E4F0EE;
+  --ok:#24532F; --ok-bg:#E3F1E6; --warn:#8A3B00; --warn-bg:#FDEBD8; --info:#134B8A; --info-bg:#E1ECF9;
+  --crit:#A1241C; --crit-bg:#FBE9E7; --crit-fg:#FFFFFF;
+  --font-ui:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-data:'IBM Plex Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1716; --surface:#152220; --surface-2:#1B2B28; --line:#2A3C39; --line-soft:#213330;
+  --fg:#E6EEEC; --fg-2:#C3D1CD; --muted:#9AAEA9;
+  --rail:#0A1F1C; --rail-fg:#E4EEEB; --rail-muted:#9DB5AF; --rail-active:#1D4A44;
+  --accent:#3FB3A6; --accent-fg:#06211E; --accent-soft:#163A36;
+  --ok:#8FD6A0; --ok-bg:#16301E; --warn:#F2B66B; --warn-bg:#3A2610; --info:#9CC3F0; --info-bg:#132940;
+  --crit:#FF8A80; --crit-bg:#3B1512; --crit-fg:#2A0906; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1716; --surface:#152220; --surface-2:#1B2B28; --line:#2A3C39; --line-soft:#213330;
+  --fg:#E6EEEC; --fg-2:#C3D1CD; --muted:#9AAEA9;
+  --rail:#0A1F1C; --rail-fg:#E4EEEB; --rail-muted:#9DB5AF; --rail-active:#1D4A44;
+  --accent:#3FB3A6; --accent-fg:#06211E; --accent-soft:#163A36;
+  --ok:#8FD6A0; --ok-bg:#16301E; --warn:#F2B66B; --warn-bg:#3A2610; --info:#9CC3F0; --info-bg:#132940;
+  --crit:#FF8A80; --crit-bg:#3B1512; --crit-fg:#2A0906; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.45}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.app{display:flex;min-height:100%}
+.rail{flex:0 0 228px;background:var(--rail);color:var(--rail-fg);display:flex;flex-direction:column;gap:4px;padding-block:20px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:14px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 18px}
+.brand b{font-size:17px;letter-spacing:-.01em}
+.brand small{display:block;font-size:12px;color:var(--rail-muted);font-weight:500}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;border-radius:8px;color:var(--rail-muted);font-size:15px}
+.nav button:hover{color:var(--rail-fg);background:rgba(255,255,255,.04)}
+.nav button[aria-current="page"]{color:#fff;background:var(--rail-active);font-weight:600}
+.nav button:focus-visible{outline:2px solid #7FD1C4}
+.count{font-family:var(--font-data);font-size:12px;padding:1px 8px;border-radius:999px;background:#173B36;color:#CFE3DE}
+.count.hot{background:#F2B66B;color:#2A1600}
+.railfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.railcard{padding:12px;border-radius:10px;background:#173B36;font-size:12.5px;color:var(--rail-muted);display:flex;flex-direction:column;gap:4px}
+.railcard strong{color:var(--rail-fg);font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:14px;padding-left:28px;padding-right:max(28px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface)}
+.topbar .demo{font-size:12.5px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:5px 10px;border-radius:999px}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.who select{min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 10px;font-weight:600;color:var(--fg)}
+.view{padding-block:26px 48px;padding-left:28px;padding-right:max(28px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px;max-width:1280px;width:100%}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:500}
+h1{margin:0;font-size:28px;letter-spacing:-.02em;text-wrap:balance}
+h2{margin:0;font-size:16.5px;font-weight:600}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sub{font-size:13px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.tile span{font-size:13px;font-weight:600;color:var(--muted)}
+.tile b{font-family:var(--font-data);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile small{font-size:12.5px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;width:fit-content}
+.p-ok{background:var(--ok-bg);color:var(--ok)} .p-warn{background:var(--warn-bg);color:var(--warn)}
+.p-info{background:var(--info-bg);color:var(--info)} .p-crit{background:var(--crit);color:var(--crit-fg)}
+.p-mute{background:var(--surface-2);color:var(--fg-2)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{text-align:left;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line-soft);font-size:14px;vertical-align:middle}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+.btn{min-height:42px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;filter:none}
+.btn.small{min-height:36px;padding:0 12px;font-size:13.5px}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13.5px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+.exc{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;background:var(--surface)}
+.exc.resolved{opacity:.72}
+.exc header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
+.exc h3{margin:0;font-size:15.5px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 18px;font-size:13.5px}
+.facts div span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.why{font-size:14px;background:var(--surface-2);border-radius:8px;padding:10px 12px;margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.cite{font-size:12.5px;color:var(--muted)}
+.cite b{font-family:var(--font-data);font-weight:500;color:var(--fg-2)}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--font-data);font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.drawer{position:fixed;inset:0;display:flex;justify-content:flex-end;background:rgba(6,20,18,.45);z-index:20}
+.drawer[hidden]{display:none!important}
+.sheet{width:min(720px,100%);height:100%;overflow-y:auto;background:var(--bg);border-left:1px solid var(--line);padding-block:calc(22px + env(safe-area-inset-top,0px)) calc(28px + env(safe-area-inset-bottom,0px));padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.rows{display:flex;flex-direction:column}
+.rrow{display:grid;grid-template-columns:1.7fr 1.1fr 1.3fr .9fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:14px}
+.rrow .v{font-family:var(--font-data);font-weight:600}
+.checks{display:flex;flex-direction:column;gap:8px}
+.check{display:flex;gap:10px;align-items:baseline;font-size:14px}
+.check i{font-style:normal;font-family:var(--font-data);font-size:12px;padding:1px 7px;border-radius:4px;background:var(--ok-bg);color:var(--ok);flex:none}
+.check i.bad{background:var(--crit-bg);color:var(--crit)}
+.proc{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.proc p{margin:0;font-size:14px}
+.audit td:first-child{white-space:nowrap}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg label{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-weight:600;font-size:14px}
+.seg input{accent-color:var(--accent)}
+.toggle{display:flex;align-items:center;gap:12px;font-weight:600}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface);resize:vertical}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
+@media (max-width:860px){
+  .app{flex-direction:column}
+  .rail{flex:none;padding-block:12px;padding-right:max(14px,env(safe-area-inset-right,0px))}
+  .brand{padding-bottom:10px}
+  .nav{flex-direction:row;overflow-x:auto;gap:4px}
+  .nav button{white-space:nowrap;padding:9px 12px}
+  .railfoot{display:none}
+  .topbar,.view{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  h1{font-size:23px}
+  .rrow{grid-template-columns:1.4fr 1fr 1fr;}.rrow .ref{display:none}
+}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+
+/* ── Result report and e-mail preview. The paper keeps the lab's printed colours in both themes. ── */
+:root{ --paper:#FFFFFF; --ink:#1C2733; --ink-2:#4A5866; --navy:#0A2A4A; --teal:#0F8EA3; --teal-soft:#E6F4F7; --rule:#C9D3DC;
+  --font-head:'Century Gothic','Didact Gothic','Avenir Next',sans-serif; --font-doc:'Calibri','Carlito','Segoe UI',sans-serif }
+.modal{position:fixed;inset:0;z-index:25;background:rgba(6,20,18,.86);overflow-y:auto;padding-block:calc(18px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal[hidden]{display:none!important}
+.modalbar{max-width:820px;margin:0 auto 12px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;color:#fff}
+.modalbar strong{font-size:15px}
+.modalbar .btn{background:var(--surface);color:var(--fg)}
+.paper{position:relative;max-width:820px;margin:0 auto;background:var(--paper);color:var(--ink);font-family:var(--font-doc);font-size:13.5px;line-height:1.4;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden}
+.lh-band{display:block;width:100%;height:auto}
+.lh-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;padding:18px 34px 6px}
+.lh-top img{width:230px;max-width:60%;height:auto}
+.lh-contact{font-size:11.5px;color:#33414F;text-align:right;display:flex;flex-direction:column;gap:2px}
+.doc{padding:6px 34px 26px;display:flex;flex-direction:column;gap:14px}
+.doc h2{font-family:var(--font-head);font-size:17px;letter-spacing:.14em;color:var(--navy);text-align:center;margin:6px 0 0}
+.doc h3{font-family:var(--font-head);font-size:12.5px;letter-spacing:.08em;color:#fff;background:var(--navy);margin:0;padding:6px 10px}
+.pblock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--rule)}
+.pblock div{padding:7px 10px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.pblock span{display:block;font-size:10.5px;letter-spacing:.06em;color:var(--ink-2);font-weight:700}
+.pblock b{font-weight:600}
+.rtab{width:100%;min-width:0;border-collapse:collapse}
+.rtab th{background:var(--teal-soft);color:var(--navy);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-bottom:1px solid var(--rule);text-align:left}
+.rtab td{padding:6px 10px;border-bottom:1px solid var(--rule);font-size:13px;color:var(--ink)}
+.rtab td.res{font-weight:700;font-variant-numeric:tabular-nums}
+.rtab .fH,.rtab .fL,.rtab .fC,.rtab .fPOS{color:#9A2B12;font-weight:700}
+.sect{border:1px solid var(--rule)}
+.sect .tablewrap table{min-width:0}
+.cmts{border:1px solid var(--rule);padding:10px 12px}
+.cmts p{margin:4px 0 0}
+.sigs{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:6px}
+.sig{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.sig span.k{font-size:10.5px;letter-spacing:.06em;color:var(--ink-2);font-weight:700}
+.sig img{height:44px;width:auto;align-self:flex-start;mix-blend-mode:multiply}
+.sig .pending{height:44px;display:flex;align-items:flex-end;color:#9A2B12;font-weight:700}
+.endrep{text-align:center;font-family:var(--font-head);letter-spacing:.14em;color:var(--ink-2);font-size:11.5px}
+.lh-foot{position:relative;color:#fff}
+.lh-foot img{display:block;width:100%;height:58px;object-fit:cover;object-position:left}
+.lh-foot div{position:absolute;inset:0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;padding:0 24px;font-size:10.5px;letter-spacing:.06em}
+.lh-foot b{font-family:var(--font-head);font-weight:400;letter-spacing:.12em}
+.watermark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-family:var(--font-head);font-size:120px;letter-spacing:.2em;color:rgba(154,43,18,.10);transform:rotate(-28deg)}
+.mail{max-width:820px;margin:0 auto 16px;background:var(--surface);color:var(--fg);border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.mailhead{padding:14px 18px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}
+.mailhead span{color:var(--muted);font-weight:600}
+.mailbody{padding:16px 18px;font-size:14px;line-height:1.55;white-space:pre-wrap;max-width:75ch}
+.attach{margin:0 18px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.attach b{font-family:var(--font-data);font-size:13px;font-weight:500;word-break:break-all}
+@media (max-width:640px){.sect .tablewrap table{min-width:480px}.pblock{grid-template-columns:repeat(2,minmax(0,1fr))}.sigs{grid-template-columns:1fr}.doc,.lh-top{padding-left:16px;padding-right:16px}.lh-contact{text-align:left}.watermark{font-size:64px}}
+</style>
+
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7FD1C4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6"/><path d="M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg>
+      <div><b>MitochronAi Lab</b><small id="labName"></small></div>
+    </div>
+    <div class="nav" id="nav"></div>
+    <div class="railfoot">
+      <div class="railcard"><strong>Gaya</strong><span id="railModel"></span><span>Sandboxed to this lab's workspace</span></div>
+      <div class="railcard"><span><span class="dot" style="background:#7FD1C4"></span>Demo clock: Sat 10 Oct 2026, 17:50</span></div>
+    </div>
+  </nav>
+  <main>
+    <div class="topbar">
+      <span class="demo">Demo · synthetic data · nothing is sent</span>
+      <label class="who" for="who">Signed in as
+        <select id="who"></select>
+      </label>
+    </div>
+    <div id="view" class="view" tabindex="-1"></div>
+  </main>
+</div>
+<div class="drawer" id="drawer" hidden><section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></section></div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div id="modalInner"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const DATA = /*DATA*/null;
+const IMG = /*IMG*/null;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const T = s => s ? new Date(s) : null;
+const NOW = new Date('2026-10-10T17:50+01:00');
+const fmt = d => d ? d.toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'}) : '—';
+const fmtT = d => d ? d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'}) : '—';
+const mins = (a, b) => (b - a) / 60000;
+const median = a => { if (!a.length) return null; const s = [...a].sort((x,y)=>x-y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2; };
+const hm = m => m == null ? '—' : (m >= 60 ? `${Math.floor(m/60)} h ${String(Math.round(m%60)).padStart(2,'0')} m` : `${Math.round(m)} m`);
+
+// ── State ─────────────────────────────────────────────────────────────────
+const staff = Object.fromEntries(DATA.staff.map(s => [s.id, s]));
+const patients = Object.fromEntries(DATA.patients.map(p => [p.id, p]));
+const catalog = {}; DATA.test_catalog.forEach(c => (catalog[c.code] ||= []).push(c));
+const cat = (code, sex) => (catalog[code] || []).find(c => c.ref_sex === sex) || (catalog[code] || [])[0] || {};
+const results = DATA.results.map(r => ({...r}));
+const orders = DATA.orders.map(o => ({...o, results: results.filter(r => r.order_id === o.id)}));
+const state = { view: 'dashboard', user: 'STF-001', filter: 'all', model: 'local', comments: false, audit: [] };
+const exceptions = buildExceptions();
+
+function audit(action, detail, actor = 'human') {
+  state.audit.unshift({ at: new Date(), actor: actor === 'gaya' ? 'Gaya' : staff[state.user].display_name, kind: actor, action, detail, model: actor === 'gaya' ? state.model : '' });
+}
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
+const isChief = () => staff[state.user].role === 'chief_scientist';
+const modelLabel = m => ({ local: 'Local model (on this PC)', byo: 'Your own API key', connect: 'MitochronAi Connect' }[m]);
+
+// ── Gaya's deterministic checks (mirror scripts/validate_data.py) ──────────
+const ROSTER = new Set(DATA.duty_roster.map(r => `${r.staff_id}|${r.weekday}`));
+const isoDay = d => ((d.getUTCDay() + 6) % 7) + 1; // times are WAT (+01:00); day boundary unaffected inside opening hours
+function checksFor(o) {
+  const p = patients[o.patient_id], out = [];
+  const by = Object.fromEntries(o.results.map(r => [r.test_code, r]));
+  o.results.forEach(r => {
+    const tt = T(r.tested_at);
+    if (r.performed_by && tt) out.push({ ok: ROSTER.has(`${r.performed_by}|${isoDay(tt)}`), text: `${r.test_code}: ${staff[r.performed_by]?.display_name || '—'} on the duty roster for ${tt.toLocaleDateString('en-GB',{weekday:'long',timeZone:'Africa/Lagos'})}` });
+    const c = cat(r.test_code, p.sex);
+    if (r.unit && c.unit !== undefined) out.push({ ok: r.unit === c.unit, text: `${r.test_code}: unit ${r.unit} matches the catalogue` });
+    if (r.test_code === 'MANTOUX' && r.read_at) {
+      const h = (T(r.read_at) - T(r.collected_at)) / 3.6e6, cut = p.risk_factors ? 5 : 10;
+      out.push({ ok: h >= 48 && h <= 72, text: `Mantoux read at ${h.toFixed(1)} h (window 48–72 h)` });
+      out.push({ ok: r.flag === (+r.value_numeric >= cut ? 'POS' : 'NEG'), text: `Mantoux ${r.value_numeric} mm judged at the ≥ ${cut} mm cut-off${p.risk_factors ? ' (risk factor on file)' : ''}` });
+    }
+  });
+  if (by.TC && by.HDL && by.TG && by.LDL) {
+    const f = +by.TC.value_numeric - +by.HDL.value_numeric - +by.TG.value_numeric / 2.2;
+    out.push({ ok: Math.abs(+by.LDL.value_numeric - f) <= 0.1, text: `LDL ${by.LDL.value_numeric} mmol/L agrees with Friedewald (${f.toFixed(1)})` });
+  }
+  return out;
+}
+
+// ── Gaya drafts the report and the result e-mail for every request whose checks pass ──
+orders.forEach(o => {
+  if (o.status === 'rejected') return;
+  const benchDone = new Date(Math.max(...o.results.map(r => T(r.tested_at))));
+  const ok = checksFor(o).every(c => c.ok);
+  o.report = { status: !ok ? 'held' : o.status === 'released' ? 'final' : 'draft', draftedAt: new Date(benchDone.getTime() + 3 * 60000), previewedBy: new Set() };
+  o.email = o.status === 'released' ? { status: 'sent', at: new Date(Math.max(...o.results.map(r => T(r.released_at))) + 2 * 60000) } : ok ? { status: 'drafted' } : null;
+  if (o.report.status === 'draft') {
+    const p = patients[o.patient_id];
+    state.audit.push({ at: o.report.draftedAt, actor: 'Gaya', kind: 'gaya', action: 'report.drafted', model: state.model,
+      detail: `${p.lab_patient_id}: checks passed; draft report and result e-mail prepared on the lab template and attached to the record` });
+  }
+});
+state.audit.sort((a, b) => b.at - a.at);
+const pendingDrafts = () => orders.filter(o => o.report?.status === 'draft').length;
+
+// ── Pilot catches, replayed as incoming entries Gaya has held ──────────────
+function buildExceptions() {
+  const P = n => DATA.patients.find(p => p.lab_patient_id === n);
+  return [
+    { id: 'EXC-1', type: 'Read window', sev: 'crit', patient: P('MCA-2026-0003'), test: 'Mantoux',
+      facts: [['Placed', 'Thu 08 Oct, 09:05'], ['Recorded read', 'Fri 09 Oct, 15:10'], ['Elapsed', '30.1 h'], ['Entered by', 'Sct. Creatinin Jaffe']],
+      why: 'A Mantoux reading is valid only 48–72 hours after placement. This entry was recorded at 30 hours, so either the time is wrong or the test was read too early.',
+      cite: ['SOP-MAN-01 §5', 'Reading time 48–72 h; induration measured transversely in mm'],
+      options: [['Correct the read time', 'Read time corrected after checking with the reader'], ['Schedule a re-read in the window', 'Re-read booked for Sat 10 Oct, 09:30']] },
+    { id: 'EXC-2', type: 'Cut-off', sev: 'warn', patient: P('MCA-2026-0008'), test: 'Mantoux',
+      facts: [['Induration', '7 mm'], ['Flag entered', 'Negative'], ['Risk factor on file', 'Recent TB contact'], ['Cut-off applied', '≥ 10 mm']],
+      why: 'This patient has a recent TB contact on file, which makes the ≥ 5 mm cut-off apply. At 7 mm the result would be positive, not negative.',
+      cite: ['SOP-MAN-01 §6', 'Cut-off ≥ 10 mm standard; ≥ 5 mm for HIV, immunosuppression or recent TB contact'],
+      options: [['Apply the ≥ 5 mm cut-off', 'Flag changed to positive at the ≥ 5 mm cut-off'], ['Risk factor is wrong', 'Risk factor removed after checking the request form; ≥ 10 mm stands']] },
+    { id: 'EXC-3', type: 'Formula', sev: 'warn', patient: P('MCA-2026-0009'), test: 'Lipid profile',
+      facts: [['TC / HDL / TG', '5.9 / 1.1 / 1.8 mmol/L'], ['LDL entered', '3.2 mmol/L'], ['Friedewald gives', '4.0 mmol/L'], ['Marked as', 'Calculated']],
+      why: 'The LDL is marked as calculated, but it doesn\'t match the Friedewald formula from the same panel. Gaya won\'t change it: it was either measured directly or mistyped.',
+      cite: ['SOP-LIP-01 §4', 'LDL = TC − HDL − TG/2.2 (mmol/L), valid when TG < 4.5 mmol/L'],
+      options: [['It was measured directly', 'LDL kept; source changed to "measured"'], ['Use the calculated value', 'LDL corrected to 4.0 mmol/L (calculated)']] },
+    { id: 'EXC-4', type: 'Duty roster', sev: 'warn', patient: P('MCA-2026-0012'), test: 'Full blood count',
+      facts: [['Tested', 'Sat 10 Oct, 11:20'], ['Attributed to', 'Sct. Taenia solium'], ['On duty Saturday', 'Sct. Creatinin Jaffe'], ['Roster for Taenia solium', 'Mon–Wed']],
+      why: 'The test is attributed to a scientist who isn\'t on the duty roster on Saturdays. The report would carry the wrong name and signature.',
+      cite: ['Duty roster', 'Sct. Taenia solium Mon–Wed · Sct. Creatinin Jaffe Thu–Sat'],
+      options: [['Reassign to Sct. Creatinin Jaffe', 'Performer corrected to Sct. Creatinin Jaffe'], ['Roster exception (cover shift)', 'Recorded as a cover shift with the chief\'s note']] },
+    { id: 'EXC-5', type: 'Recipient', sev: 'crit', patient: P('MCA-2026-0002'), test: 'Result e-mail',
+      facts: [['Patient', 'Filip Joshua'], ['Draft addressed to', 'jane.doe@example.com'], ['Address on file', 'filip.joshua@example.com'], ['That address belongs to', 'MCA-2026-0005']],
+      why: 'The result e-mail is addressed to a different patient. Sending it would disclose one patient\'s results to another.',
+      cite: ['Policy PRV-02', 'Results go only to the address on the patient\'s own record'],
+      options: [['Use the address on file', 'Recipient corrected to the patient\'s own address'], ['Hold and call the patient', 'E-mail held; patient to confirm their address by phone']] },
+  ].map(e => ({ ...e, status: 'open', resolution: '' }));
+}
+
+// ── Procedures & precautions shown on a record (demo SOP library) ──────────
+const PROCS = {
+  MANTOUX: ['SOP-MAN-01 §5', 'Read 48–72 h after placement. Measure the induration, not the redness, across the forearm, in millimetres.'],
+  TC: ['SOP-LIP-01 §2', 'Lipid profile needs a 9–12 h fast; water is allowed. Record fasting hours on the request.'],
+  LDL: ['SOP-LIP-01 §4', 'Use Friedewald only when TG < 4.5 mmol/L; above that, measure LDL directly.'],
+  FBG: ['SOP-GLU-01 §2', 'Collect into a fluoride-oxalate tube after at least an 8 h fast; separate within 1 h if not analysed at once.'],
+  HB: ['SOP-HAE-01 §3', 'EDTA sample: mix by gentle inversion 8–10 times; analyse within 24 h. Check for clots before loading.'],
+  HPSA: ['SOP-HPY-01 §2', 'Stop proton-pump inhibitors 2 weeks and antibiotics 4 weeks before a stool antigen test.'],
+  FIT: ['SOP-FIT-01 §2', 'Immunochemical test: no dietary restriction is needed. One stool sample in the kit tube.'],
+  MAL: ['SOP-MAL-01 §3', 'Read the RDT within the manufacturer\'s stated window; a faint line counts as positive.'],
+  BG: ['SOP-BB-01 §2', 'Confirm ABO with forward and reverse grouping; record RhD separately.'],
+};
+
+// ── Views ─────────────────────────────────────────────────────────────────
+const NAV = [['dashboard','Dashboard'],['worklist','Worklist'],['gaya','Gaya'],['qc','Quality control'],['audit','Audit log'],['settings','Settings']];
+function renderNav() {
+  const pend = orders.filter(o => o.status === 'awaiting_approval').length;
+  const exc = exceptions.filter(e => e.status === 'open').length;
+  $('#nav').innerHTML = NAV.map(([k, l]) => {
+    const c = k === 'worklist' ? pend : k === 'gaya' ? exc : null;
+    return `<button type="button" data-view="${k}" ${state.view === k ? 'aria-current="page"' : ''}><span>${l}</span>${c ? `<span class="count ${k === 'gaya' ? 'hot' : ''}">${c}</span>` : ''}</button>`;
+  }).join('');
+  $('#railModel').textContent = modelLabel(state.model);
+}
+function render() {
+  renderNav();
+  const v = { dashboard: viewDashboard, worklist: viewWorklist, gaya: viewGaya, qc: viewQC, audit: viewAudit, settings: viewSettings }[state.view];
+  $('#view').innerHTML = v();
+  bindView();
+}
+
+function metrics() {
+  const live = orders.filter(o => o.status !== 'rejected');
+  const released = results.filter(r => r.status === 'released');
+  const tat = live.filter(o => o.status === 'released').map(o => mins(T(o.received_at), new Date(Math.max(...o.results.map(r => T(r.released_at))))));
+  const byTest = {};
+  released.forEach(r => { const o = orders.find(x => x.id === r.order_id); if (r.test_code === 'MANTOUX') return; (byTest[r.test_code] ||= []).push(mins(T(o.received_at), T(r.released_at))); });
+  return { orders: orders.length, rejected: orders.filter(o => o.status === 'rejected').length, released: released.length, pending: results.filter(r => r.status === 'awaiting_approval').length, tat: median(tat), byTest };
+}
+
+function viewDashboard() {
+  const m = metrics();
+  const open = exceptions.filter(e => e.status === 'open').length;
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat'];
+  const vol = days.map((d, i) => orders.filter(o => isoDay(T(o.received_at)) === i + 1).length);
+  const tests = Object.entries(m.byTest).map(([k, v]) => [k, median(v)]).sort((a, b) => b[1] - a[1]);
+  const resolved = exceptions.filter(e => e.status === 'resolved').length;
+  return `
+  <div class="head"><div><div class="eyebrow">MITOCHRONAI LAB · Week of 5 Oct 2026</div><h1>Laboratory overview</h1></div>
+  <button class="btn" data-go="gaya" type="button">${open ? `Review ${open} held item${open > 1 ? 's' : ''}` : 'Gaya queue is clear'}</button></div>
+  <div class="tiles">
+    <div class="tile"><span>Requests received</span><b>${m.orders}</b><small>${m.rejected} rejected (${(m.rejected / m.orders * 100).toFixed(1)} %)</small></div>
+    <div class="tile"><span>Results released</span><b>${m.released}</b><small>of ${results.length} results</small></div>
+    <div class="tile"><span>Awaiting approval</span><b style="color:var(--warn)">${m.pending}</b><small>chief scientist sign-off</small></div>
+    <div class="tile"><span>Median turnaround</span><b>${hm(m.tat)}</b><small>received → released, same-day tests</small></div>
+    <div class="tile"><span>Held by Gaya</span><b style="color:${open ? 'var(--crit)' : 'var(--ok)'}">${open}</b><small>${resolved} resolved this session</small></div>
+  </div>
+  <div class="grid2">
+    <section class="panel chart" aria-labelledby="h-vol"><div><h2 id="h-vol">Requests per day</h2><p class="sub">Received at reception, Mon–Sat</p></div>${barsV(days, vol)}</section>
+    <section class="panel chart" aria-labelledby="h-tat"><div><h2 id="h-tat">Median turnaround by test</h2><p class="sub">Received → released, in minutes. Mantoux excluded (48–72 h by design)</p></div>${barsH(tests)}</section>
+  </div>
+  <div class="grid2">
+    <section class="panel" aria-labelledby="h-gaya"><div><h2 id="h-gaya">Gaya's work</h2><p class="sub">Counts from this demo session</p></div>
+      <div class="tiles">
+        <div class="tile"><span>Records checked</span><b>${orders.length}</b><small>roster, units, read windows, formulas</small></div>
+        <div class="tile"><span>Problems held</span><b>${exceptions.length}</b><small>pilot catches, replayed</small></div>
+        <div class="tile"><span>Report drafts</span><b>${pendingDrafts()}</b><small>waiting for the chief's preview and approval</small></div>
+      </div>
+      <p class="note">Gaya checks every record before a report is built, and holds anything that doesn't add up. A named scientist decides each one.</p>
+    </section>
+    <section class="panel" aria-labelledby="h-sop"><div><h2 id="h-sop">SOP coverage</h2><p class="sub">Tests with a written procedure Gaya can cite</p></div>
+      ${sopCoverage()}
+    </section>
+  </div>`;
+}
+function sopCoverage() {
+  const tests = [['Mantoux','MANTOUX'],['Lipid profile','TC'],['Fasting glucose','FBG'],['H. pylori','HPSA'],['Full blood count','HB'],['Malaria RDT','MAL'],['Blood group','BG'],['FIT','FIT']];
+  const have = new Set(['MANTOUX','TC','FBG','HPSA']);
+  return `<div class="rows">${tests.map(([n, c]) => `<div class="rrow" style="grid-template-columns:1.6fr 1fr 1.6fr"><span>${n}</span>${have.has(c) ? '<span class="pill p-ok">SOP on file</span>' : '<span class="pill p-warn">SOP gap</span>'}<span class="cite"><b>${have.has(c) ? PROCS[c][0] : '—'}</b></span></div>`).join('')}</div>
+  <p class="note">4 of 8 tests are covered. For the rest, Gaya's wording needs a scientist's review, as reported in the pilot.</p>`;
+}
+function barsV(labels, vals) {
+  const W = 520, H = 210, pad = 30, max = Math.max(4, ...vals), bw = (W - pad * 2) / labels.length;
+  const y = v => H - 26 - (v / max) * (H - 50);
+  let g = '';
+  for (let t = 0; t <= max; t += Math.ceil(max / 4)) g += `<line x1="${pad}" x2="${W - 8}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line-soft)"/><text x="${pad - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  labels.forEach((l, i) => { const x = pad + i * bw + bw * 0.22; g += `<rect x="${x}" y="${y(vals[i])}" width="${bw * 0.56}" height="${H - 26 - y(vals[i])}" rx="4" fill="var(--accent)"/><text x="${x + bw * 0.28}" y="${y(vals[i]) - 6}" text-anchor="middle" style="fill:var(--fg)">${vals[i]}</text><text x="${x + bw * 0.28}" y="${H - 8}" text-anchor="middle">${l}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Requests per day: ${labels.map((l, i) => `${l} ${vals[i]}`).join(', ')}">${g}</svg>`;
+}
+function barsH(rows) {
+  const W = 520, rowH = 26, H = rows.length * rowH + 30, left = 74, max = Math.max(...rows.map(r => r[1]), 60);
+  const x = v => left + (v / max) * (W - left - 60);
+  let g = '';
+  [0, 60, 120, 180, 240].filter(t => t <= max).forEach(t => g += `<line x1="${x(t)}" x2="${x(t)}" y1="4" y2="${H - 22}" stroke="var(--line-soft)"/><text x="${x(t)}" y="${H - 6}" text-anchor="middle">${t}</text>`);
+  rows.forEach(([k, v], i) => { const yy = 6 + i * rowH; g += `<text x="${left - 8}" y="${yy + 14}" text-anchor="end">${k}</text><rect x="${left}" y="${yy + 3}" width="${x(v) - left}" height="15" rx="3" fill="${v > 150 ? 'var(--warn)' : 'var(--accent)'}"/><text x="${x(v) + 6}" y="${yy + 14}" style="fill:var(--fg)">${Math.round(v)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Median turnaround in minutes by test">${g}</svg><div class="legend"><span><span class="sw" style="background:var(--accent)"></span>Within 2.5 h</span><span><span class="sw" style="background:var(--warn)"></span>Over 2.5 h</span></div>`;
+}
+
+function orderStatus(o) {
+  if (o.status === 'rejected') return '<span class="pill p-crit">Rejected</span>';
+  if (o.status === 'released') return '<span class="pill p-ok">Released</span>';
+  return '<span class="pill p-warn">Awaiting approval</span>';
+}
+function flagPill(r) {
+  const m = { N: ['Normal','p-ok'], H: ['High','p-warn'], L: ['Low','p-info'], C: ['Critical','p-crit'], POS: ['Positive','p-warn'], NEG: ['Negative','p-ok'] }[r.flag];
+  return m ? `<span class="pill ${m[1]}">${m[0]}</span>` : '<span class="pill p-mute">Reported</span>';
+}
+function keyFlags(o) {
+  const f = o.results.filter(r => ['H','L','C','POS'].includes(r.flag)).map(r => `${r.test_code} ${({H:'high',L:'low',C:'critical',POS:'positive'})[r.flag]}`);
+  return o.status === 'rejected' ? esc(o.reject_reason) : (f.length ? f.slice(0, 3).join(' · ') + (f.length > 3 ? ' …' : '') : 'Within range');
+}
+function viewWorklist() {
+  const F = [['all','All'],['awaiting_approval','To approve'],['released','Released'],['rejected','Rejected']];
+  const rows = orders.filter(o => state.filter === 'all' || o.status === state.filter).sort((a, b) => T(b.received_at) - T(a.received_at));
+  return `
+  <div class="head"><div><div class="eyebrow">All benches · Mon 5 – Sat 10 Oct 2026</div><h1>Worklist</h1></div>
+  <div class="filters" role="group" aria-label="Filter">${F.map(([k, l]) => `<button type="button" class="chip" data-filter="${k}" aria-pressed="${state.filter === k}">${l}</button>`).join('')}</div></div>
+  <section class="panel" aria-label="Requests"><div class="tablewrap"><table>
+  <thead><tr><th>Lab ID</th><th>Patient</th><th>Tests</th><th>Key flags</th><th>Received</th><th>Status</th><th>Report</th></tr></thead>
+  <tbody>${rows.map(o => { const p = patients[o.patient_id]; return `<tr class="click" data-order="${o.id}" tabindex="0">
+    <td class="mono">${p.lab_patient_id}</td><td>${esc(p.full_name)} <span class="sub">${p.sex}</span></td>
+    <td>${o.results.length ? [...new Set(o.results.map(r => r.test_code))].slice(0, 4).join(', ') : '—'}</td><td>${keyFlags(o)}</td>
+    <td class="mono">${fmt(T(o.received_at))}</td><td>${orderStatus(o)}</td>
+    <td>${!o.report ? '—' : o.report.status === 'held' ? '<span class="pill p-crit">Held</span>' : `<button type="button" class="btn small" data-preview="${o.id}" aria-label="${o.report.status === 'final' ? 'View' : 'Preview'} report for ${esc(p.full_name)}">${o.report.status === 'final' ? 'View' : 'Preview'}</button>`}</td></tr>`; }).join('')}</tbody></table></div>
+  <p class="note">Gaya drafts each report on the lab template as soon as a request's checks pass, and attaches it to the patient's record. Select a request for its results, checks and procedures, or preview its report directly.</p></section>`;
+}
+
+function viewGaya() {
+  const open = exceptions.filter(e => e.status === 'open');
+  const done = exceptions.filter(e => e.status === 'resolved');
+  const card = e => { const p = e.patient; return `<article class="exc ${e.status}" aria-labelledby="t-${e.id}">
+    <header><div><h3 id="t-${e.id}">${esc(e.type)}: ${esc(e.test)} · <span class="mono">${p.lab_patient_id}</span> ${esc(p.full_name)}</h3></div>
+    ${e.status === 'open' ? `<span class="pill ${e.sev === 'crit' ? 'p-crit' : 'p-warn'}">Held by Gaya</span>` : '<span class="pill p-ok">Resolved</span>'}</header>
+    <div class="facts">${e.facts.map(([k, v]) => `<div><span>${esc(k)}</span>${esc(v)}</div>`).join('')}</div>
+    <p class="why">${esc(e.why)}</p>
+    <div class="cite">Source: <b>${esc(e.cite[0])}</b> · ${esc(e.cite[1])}</div>
+    ${e.status === 'open' ? `<div class="actions">${e.options.map(([l], i) => `<button type="button" class="btn ${i ? '' : 'primary'} small" data-resolve="${e.id}" data-opt="${i}">${esc(l)}</button>`).join('')}</div>`
+      : `<p class="note"><strong>Decision:</strong> ${esc(e.resolution)} · ${esc(e.by)} · ${fmtT(e.at)}</p>`}
+  </article>`; };
+  return `
+  <div class="head"><div><div class="eyebrow">Gaya · ${esc(modelLabel(state.model))}</div><h1>Held for a scientist</h1></div></div>
+  <p class="note" style="max-width:70ch">Gaya checks each new entry against the duty roster, the test catalogue, the read windows and the formulas in the lab's SOPs. It never quietly fixes a problem. It holds the record and explains why, and a scientist decides. These five cases replay the catches from Gaya's pilot.</p>
+  ${open.length ? open.map(card).join('') : '<section class="panel"><h2>Queue clear</h2><p class="note">Every held item has a decision. Each one is in the audit log.</p></section>'}
+  ${done.length ? `<h2>Resolved</h2>${done.map(card).join('')}` : ''}`;
+}
+
+function viewQC() {
+  const runs = DATA.qc_runs.filter(q => q.test_code === state.qcTest && q.level === state.qcLevel);
+  const opts = [['FBG','L1'],['FBG','L2'],['TC','L1'],['TC','L2']];
+  return `
+  <div class="head"><div><div class="eyebrow">Analyser Chem-1 · daily run before the first patient</div><h1>Quality control</h1></div>
+  <div class="filters" role="group" aria-label="Control">${opts.map(([t, l]) => `<button type="button" class="chip" data-qc="${t}|${l}" aria-pressed="${state.qcTest === t && state.qcLevel === l}">${t} ${l}</button>`).join('')}</div></div>
+  <section class="panel chart" aria-labelledby="h-lj"><div><h2 id="h-lj">Levey-Jennings: ${state.qcTest} control ${state.qcLevel}</h2><p class="sub">Target ${runs[0].target_mean} ± ${runs[0].target_sd} ${state.qcTest === 'FBG' || state.qcTest === 'TC' ? 'mmol/L' : ''}</p></div>
+  ${lj(runs)}
+  <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>Within ±2 SD</span><span><span class="sw" style="background:var(--warn)"></span>1-2s warning (beyond ±2 SD)</span><span><span class="sw" style="background:var(--crit)"></span>1-3s rejection (beyond ±3 SD)</span></div></section>
+  <section class="panel" aria-labelledby="h-west"><h2 id="h-west">Westgard review</h2>${westgard()}</section>`;
+}
+function lj(runs) {
+  const W = 640, H = 250, L = 52, R = 16, top = 14, bot = 34, m = +runs[0].target_mean, sd = +runs[0].target_sd;
+  const y = v => top + (1 - (v - (m - 3.5 * sd)) / (7 * sd)) * (H - top - bot);
+  const x = i => L + i * ((W - L - R) / (runs.length - 1));
+  let g = '';
+  [-3, -2, -1, 0, 1, 2, 3].forEach(k => { const yy = y(m + k * sd); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${k === 0 ? 'var(--muted)' : Math.abs(k) >= 2 ? 'var(--warn)' : 'var(--line)'}" stroke-dasharray="${k === 0 ? '' : '4 4'}"/><text x="${L - 8}" y="${yy + 4}" text-anchor="end">${k === 0 ? 'x̄' : (k > 0 ? '+' : '') + k + 's'}</text>`; });
+  g += `<polyline fill="none" stroke="var(--accent)" stroke-width="1.6" points="${runs.map((r, i) => `${x(i)},${y(+r.value)}`).join(' ')}"/>`;
+  runs.forEach((r, i) => { const z = Math.abs((+r.value - m) / sd); const c = z > 3 ? 'var(--crit)' : z > 2 ? 'var(--warn)' : 'var(--accent)'; const d = T(r.run_at);
+    g += `<circle cx="${x(i)}" cy="${y(+r.value)}" r="${z > 2 ? 6 : 4.5}" fill="${c}" stroke="var(--surface)" stroke-width="2"/><text x="${x(i)}" y="${H - 12}" text-anchor="middle">${d.toLocaleDateString('en-GB',{weekday:'short',timeZone:'Africa/Lagos'})}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Levey-Jennings chart, ${runs.length} runs">${g}</svg>`;
+}
+function westgard() {
+  const flagged = DATA.qc_runs.filter(q => Math.abs((+q.value - +q.target_mean) / +q.target_sd) > 2);
+  if (!flagged.length) return '<p class="note">No rule violations this week.</p>';
+  return flagged.map(q => { const z = ((+q.value - +q.target_mean) / +q.target_sd); return `<div class="proc"><p><span class="pill p-warn">1-2s warning</span> <strong>${q.test_code} ${q.level}</strong> on ${fmt(T(q.run_at))}: ${q.value} (${z > 0 ? '+' : ''}${z.toFixed(1)} SD).</p>
+  <p class="cite">Source: <b>SOP-QC-01 §3</b> · A single control beyond ±2 SD is a warning: inspect neighbouring runs and the other level before releasing patient results. Reject the run on 1-3s, 2-2s or R-4s.</p>
+  <p class="note">Gaya checked the other level and the runs either side: no 2-2s or R-4s pattern. Patient results were released after the chief's review.</p></div>`; }).join('');
+}
+
+function viewAudit() {
+  const rows = state.audit;
+  return `
+  <div class="head"><div><div class="eyebrow">Append-only · nobody can edit or delete an entry</div><h1>Audit log</h1></div></div>
+  <section class="panel" aria-label="Entries">${rows.length ? `<div class="tablewrap"><table class="audit"><thead><tr><th>Time</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+  <tbody>${rows.map(a => `<tr><td class="mono">${fmtT(a.at)}</td><td>${a.kind === 'gaya' ? `<span class="pill p-info">Gaya</span> <span class="sub">${esc(modelLabel(a.model))}</span>` : esc(a.actor)}</td><td class="mono">${esc(a.action)}</td><td>${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div>`
+  : '<p class="note">Nothing yet this session. Approve a result, resolve a held item or change a setting, and it appears here with your name and the time.</p>'}</section>`;
+}
+
+function viewSettings() {
+  return `
+  <div class="head"><div><div class="eyebrow">MITOCHRONAI LAB workspace</div><h1>Settings</h1></div></div>
+  <section class="panel" aria-labelledby="h-model"><div><h2 id="h-model">Where Gaya's model runs</h2><p class="sub">Patient records stay in this lab's workspace whichever you choose.</p></div>
+    <div class="seg" role="radiogroup" aria-labelledby="h-model">
+      ${[['local','Local model on this PC','Data never leaves the building; works offline'],['byo','Your own API key','The lab pays its model provider directly'],['connect','MitochronAi Connect','Managed model, billed per task']].map(([k, l, d]) =>
+      `<label for="m-${k}"><input type="radio" id="m-${k}" name="model" value="${k}" ${state.model === k ? 'checked' : ''}> <span>${l}<br><small class="sub" style="font-weight:400">${d}</small></span></label>`).join('')}
+    </div>
+    <p class="note">In this demo the choice is recorded in the audit log; no model is called.</p></section>
+  <section class="panel" aria-labelledby="h-com"><div><h2 id="h-com">Optional comments</h2><p class="sub">Off by default. Gaya never interprets results on its own.</p></div>
+    <label class="toggle" for="comments"><input type="checkbox" id="comments" ${state.comments ? 'checked' : ''}> Let Gaya draft a comment on a report for a scientist to edit</label>
+    <p class="note">When on, a draft comment appears on each report, labelled as a draft. A scientist edits it and owns it, and it's released only with the chief's approval.</p></section>
+  <section class="panel" aria-labelledby="h-lab"><h2 id="h-lab">Laboratory</h2>
+    <div class="facts">${[['Name', DATA.labs[0].name],['Address', DATA.labs[0].address],['Hours', `${DATA.labs[0].working_days}, ${DATA.labs[0].opening_time}–${DATA.labs[0].closing_time}`],['Assistant', DATA.labs[0].assistant_name]].map(([k, v]) => `<div><span>${k}</span>${esc(v)}</div>`).join('')}</div>
+    <div class="rows">${DATA.staff.map(s => `<div class="rrow" style="grid-template-columns:1.6fr 1fr 1.6fr"><span>${esc(s.display_name)}</span><span>${s.role === 'chief_scientist' ? '<span class="pill p-info">Chief scientist</span>' : '<span class="pill p-mute">Scientist</span>'}</span><span class="sub">${DATA.duty_roster.filter(r => r.staff_id === s.id).map(r => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][r.weekday - 1]).join(' · ')}</span></div>`).join('')}</div></section>`;
+}
+
+// ── Record drawer ─────────────────────────────────────────────────────────
+function openOrder(id) {
+  const o = orders.find(x => x.id === id), p = patients[o.patient_id];
+  const checks = o.status === 'rejected' ? [] : checksFor(o);
+  const allOk = checks.every(c => c.ok);
+  const procs = [...new Set(o.results.map(r => r.test_code === 'HDL' || r.test_code === 'TG' || r.test_code === 'TCHDL' ? 'TC' : ['PCV','WBC','PLT'].includes(r.test_code) ? 'HB' : r.test_code === 'HPIGG' ? 'HPSA' : r.test_code))].filter(c => PROCS[c]);
+  const rep = o.report, previewed = rep?.previewedBy.has(state.user);
+  const canApprove = isChief() && o.status === 'awaiting_approval' && rep?.status === 'draft' && previewed;
+  const fileIcon = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>';
+  const mailIcon = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
+  const approver = o.results[0].approved_by;
+  const gateMsg = !rep || rep.status === 'held' ? 'Gaya is holding this record, so no report has been drafted. Resolve the failed check first.'
+    : !isChief() ? `Only a chief scientist can approve and send. You are signed in as ${esc(staff[state.user].display_name)}.`
+    : !previewed ? 'Open the report preview first. <b>Approve and send</b> unlocks once you have seen the generated result.'
+    : `You have previewed the report. Approving signs it with your name and sends it to <span class="mono">${esc(p.email)}</span> with the PDF attached.`;
+  $('#sheet').innerHTML = `
+    <div class="head"><div><div class="eyebrow mono">${p.lab_patient_id} · ${o.id}</div><h1 id="sheetTitle" style="font-size:24px">${esc(p.full_name)}</h1>
+    <div class="sub">${p.sex === 'F' ? 'Female' : 'Male'} · born ${p.date_of_birth} · received ${fmt(T(o.received_at))}${o.fasting_hours ? ` · fasting ${o.fasting_hours} h` : ''}</div></div>
+    <button type="button" class="btn small" id="closeSheet">Close</button></div>
+    ${orderStatus(o)}
+    ${o.status === 'rejected' ? `<section class="panel"><h2>Sample rejected</h2><p class="note">${esc(o.reject_reason)}</p></section>` : `
+    <section class="panel" aria-labelledby="h-res"><h2 id="h-res">Results</h2><div class="rows">${o.results.map(r => { const c = cat(r.test_code, p.sex); return `<div class="rrow">
+      <span>${esc(c.name || r.test_code)}</span><span class="v">${esc(r.value_numeric || r.value_text)} <span class="sub" style="font-weight:400">${esc(r.unit)}</span></span>
+      <span class="sub mono ref">${esc(c.ref_text)}</span><span>${flagPill(r)}</span></div>`; }).join('')}</div>
+      <p class="cite">Performed by <b>${esc([...new Set(o.results.map(r => staff[r.performed_by]?.display_name))].join(', '))}</b>${o.results[0].approved_by ? ` · approved by <b>${esc(staff[o.results[0].approved_by].display_name)}</b> at ${fmtT(T(o.results[0].approved_at))}` : ''}</p></section>
+    <section class="panel" aria-labelledby="h-chk"><div><h2 id="h-chk">Gaya's checks</h2><p class="sub">Deterministic rules: the same answer every time</p></div>
+      <div class="checks">${checks.map(c => `<div class="check"><i class="${c.ok ? '' : 'bad'}">${c.ok ? 'PASS' : 'HOLD'}</i><span>${esc(c.text)}</span></div>`).join('')}</div></section>
+    <section class="panel" aria-labelledby="h-proc"><div><h2 id="h-proc">Procedures and precautions</h2><p class="sub">Cited from the lab's SOP library (demo)</p></div>
+      ${procs.map(c => `<div class="proc"><p>${esc(PROCS[c][1])}</p><span class="cite">Source: <b>${PROCS[c][0]}</b></span></div>`).join('') || '<p class="note">No SOP on file for these tests. Gaya flags this as an SOP gap.</p>'}</section>
+    ${state.comments ? `<section class="panel" aria-labelledby="h-com2"><div><h2 id="h-com2">Comment</h2><p class="sub">Draft by Gaya · a scientist edits and owns it</p></div>
+      <label class="sub" for="cmt">Comment (editable)</label><textarea id="cmt">${esc(o.results.some(r => ['H','L','POS'].includes(r.flag)) ? 'Values outside the reference range are flagged above. Clinical correlation by the requesting clinician is advised.' : 'All results are within the reference ranges.')}</textarea></section>` : ''}
+    <section class="panel" aria-labelledby="h-att"><div><h2 id="h-att">Prepared by Gaya</h2><p class="sub">Attached to this patient's record</p></div>
+      ${!rep || rep.status === 'held' ? '<p class="note">No report yet: Gaya drafts it only when every check passes.</p>' : `
+      <div class="attach" style="margin:0">${fileIcon}<span style="flex:1 1 220px;min-width:0"><b>${esc(fileName(o, p))}</b><br><span class="sub">Result report on the lab template · ${rep.status === 'final' ? `final, signed by ${esc(staff[approver].display_name)}` : `draft by Gaya, ${fmt(rep.draftedAt)}`}</span></span>
+        <span class="pill ${rep.status === 'final' ? 'p-ok' : previewed ? 'p-info' : 'p-warn'}">${rep.status === 'final' ? 'Final' : previewed ? 'Previewed' : 'Not previewed'}</span><button type="button" class="btn small" id="viewReport">${rep.status === 'final' ? 'View' : 'Preview'}</button></div>
+      <div class="attach" style="margin:0">${mailIcon}<span style="flex:1 1 220px;min-width:0"><b>${esc(p.email)}</b><br><span class="sub">Result e-mail with the PDF attached · ${o.email.status === 'sent' ? `sent ${fmt(o.email.at)}` : 'drafted, not sent'}</span></span>
+        <button type="button" class="btn small" id="viewMail">Preview e-mail</button></div>`}
+    </section>
+    <section class="panel" aria-labelledby="h-rel"><h2 id="h-rel">Approval</h2>
+      ${o.status === 'released' ? `<p class="note">Approved by <b>${esc(staff[approver].display_name)}</b> at ${fmt(T(o.results[0].approved_at))}. The signed report was e-mailed to the patient.</p>`
+      : `<p class="note">${gateMsg}</p>
+      <div class="actions"><button type="button" class="btn primary" id="approve" ${canApprove ? '' : 'disabled'}>Approve and send</button><button type="button" class="btn" id="returnBench">Return to bench</button></div>`}
+    </section>`}`;
+  $('#drawer').hidden = false;
+  $('#closeSheet').focus();
+  $('#closeSheet').onclick = closeSheet;
+  const ap = $('#approve');
+  if (ap) ap.onclick = () => approveAndSend(id);
+  const rb = $('#returnBench');
+  if (rb) rb.onclick = () => { audit('result.returned', `${p.lab_patient_id}: returned to the bench for review`); toast('Returned to the bench'); closeSheet(); };
+  const vr = $('#viewReport'); if (vr) vr.onclick = () => openReport(id);
+  const vm = $('#viewMail'); if (vm) vm.onclick = () => openEmail(id);
+}
+function closeSheet() { $('#drawer').hidden = true; $('#view').focus(); }
+
+// ── Result report on the lab letterhead, and the patient e-mail ────────────
+const LAB = DATA.labs[0];
+const SIG = { 'STF-001': IMG.sigGram, 'STF-002': IMG.sigTaenia };
+const ddmmyyyy = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Africa/Lagos' });
+const dateTime = d => d ? `${ddmmyyyy(d)}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lagos' })}` : '—';
+function ageAt(dob, at) { const b = new Date(dob + 'T00:00:00+01:00'); let a = at.getFullYear() - b.getFullYear(); if (at < new Date(at.getFullYear(), b.getMonth(), b.getDate())) a--; return a; }
+const fileName = (o, p) => `${p.lab_patient_id}_${p.full_name.replace(/\s+/g, '_')}_Result.pdf`;
+
+function reportHTML(o) {
+  const p = patients[o.patient_id], first = o.results[0];
+  const collected = T(first.collected_at), approved = T(first.approved_at);
+  const final = o.status === 'released';
+  const groups = {};
+  o.results.forEach(r => { const c = cat(r.test_code, p.sex); (groups[c.department] ||= []).push([r, c]); });
+  const flagWord = f => ({ N: 'Normal', H: 'H', L: 'L', C: 'CRITICAL', POS: 'POSITIVE', NEG: 'NEGATIVE' }[f] || '');
+  const section = (dept, rows) => {
+    const tst = rows.filter(([r]) => r.test_code === 'MANTOUX');
+    const num = rows.filter(([r, c]) => c.result_type === 'numeric' && r.test_code !== 'MANTOUX');
+    const qual = rows.filter(([r, c]) => c.result_type !== 'numeric');
+    let h = `<div class="sect"><h3>${esc(dept.toUpperCase())}</h3>`;
+    if (num.length) h += `<div class="tablewrap"><table class="rtab"><thead><tr><th>Test</th><th>Result</th><th>Unit</th><th>Reference range</th><th>Flag</th></tr></thead><tbody>${num.map(([r, c]) =>
+      `<tr><td>${esc(c.name)}${r.value_source === 'calculated' ? ' <span style="color:var(--ink-2)">(calc.)</span>' : ''}</td><td class="res">${esc(r.value_numeric)}</td><td>${esc(r.unit)}</td><td>${esc(c.ref_text)}</td><td class="f${r.flag}">${flagWord(r.flag)}</td></tr>`).join('')}</tbody></table></div>`;
+    if (qual.length) h += `<div class="tablewrap"><table class="rtab"><thead><tr><th>Specimen</th><th>Test</th><th>Result</th><th>Expected</th></tr></thead><tbody>${qual.map(([r, c]) =>
+      `<tr><td>${esc(c.specimen)}</td><td>${esc(c.name)}</td><td class="res f${r.flag}">${esc(r.flag ? flagWord(r.flag) : r.value_text)}</td><td>${esc(c.ref_text)}</td></tr>`).join('')}</tbody></table></div>`;
+    tst.forEach(([r]) => { const read = T(r.read_at), hrs = (read - T(r.collected_at)) / 3.6e6, cut = p.risk_factors ? 5 : 10;
+      h += `<div class="tablewrap"><table class="rtab"><tbody>
+        <tr><td style="width:34%"><b>Tuberculin used</b></td><td>PPD 0.1 mL intradermal · Lot [No.]</td></tr>
+        <tr><td><b>Site</b></td><td>Left volar forearm</td></tr>
+        <tr><td><b>Administered</b></td><td>${dateTime(T(r.collected_at))}</td></tr>
+        <tr><td><b>Read</b></td><td>${dateTime(read)} (${hrs.toFixed(1)} hours)</td></tr>
+        <tr><td><b>Induration</b></td><td class="res">${esc(r.value_numeric)} mm (transverse diameter)</td></tr>
+        <tr><td><b>Interpretation</b></td><td class="f${r.flag}"><b>${r.flag === 'POS' ? 'POSITIVE' : 'NEGATIVE'}</b> at the ≥ ${cut} mm cut-off${p.risk_factors ? ' (risk factor on file)' : ' (no risk factor reported)'}</td></tr>
+      </tbody></table></div>`; });
+    return h + '</div>';
+  };
+  const performers = [...new Set(o.results.map(r => r.performed_by))];
+  const cmt = state.comments ? ($('#cmt')?.value || '') : '';
+  return `<article class="paper" aria-label="Result report for ${esc(p.full_name)}">
+    ${final ? '' : '<div class="watermark" aria-hidden="true">DRAFT</div>'}
+    <img class="lh-band" src="${IMG.top}" alt="">
+    <div class="lh-top"><img src="${IMG.logo}" alt="MitoChron AI: Intelligence. Health. Impact.">
+      <div class="lh-contact"><b>${esc(LAB.name)}</b><span>${esc(LAB.address)}</span><span>Tel ${esc(LAB.phone)} · mitochron-ai.tech</span></div></div>
+    <div class="doc">
+      <h2>LABORATORY RESULT REPORT</h2>
+      <div class="pblock">
+        <div><span>PATIENT NAME</span><b>${esc(p.full_name)}</b></div>
+        <div><span>AGE / SEX</span><b>${ageAt(p.date_of_birth, collected)} years / ${p.sex === 'F' ? 'Female' : 'Male'}</b></div>
+        <div><span>LAB ID</span><b>${p.lab_patient_id}</b></div>
+        <div><span>PHONE</span><b>${esc(p.phone)}</b></div>
+        <div><span>REFERRED BY</span><b>${esc(o.requested_by)}</b></div>
+        <div><span>SAMPLE COLLECTED</span><b>${dateTime(collected)}</b></div>
+        <div><span>FASTING STATUS</span><b>${o.fasting_hours ? `${o.fasting_hours} h (confirmed)` : 'Not required'}</b></div>
+        <div><span>REPORT DATE</span><b>${final ? dateTime(T(first.released_at)) : 'Draft, not released'}</b></div>
+      </div>
+      ${Object.entries(groups).map(([d, rows]) => section(d, rows)).join('')}
+      ${cmt ? `<div class="cmts"><b style="color:var(--navy)">COMMENTS</b><p>${esc(cmt)}</p></div>` : ''}
+      <div class="sigs">
+        <div class="sig"><span class="k">PERFORMED BY</span>${performers.map(id => SIG[id] ? `<img src="${SIG[id]}" alt="Signature of ${esc(staff[id].display_name)}">` : '<div class="pending" style="color:var(--ink-2);font-weight:400">[signature on file]</div>').join('')}
+          <b>${esc(performers.map(id => staff[id].display_name).join(', '))}</b><span>Medical Laboratory Scientist</span></div>
+        <div class="sig"><span class="k">VERIFIED &amp; AUTHORISED BY</span>${final && SIG[first.approved_by] ? `<img src="${SIG[first.approved_by]}" alt="Signature of ${esc(staff[first.approved_by].display_name)}">` : '<div class="pending">Pending verification</div>'}
+          <b>${final ? esc(staff[first.approved_by].display_name) : 'Chief Scientist'}</b><span>Laboratory Director${final ? ` · ${dateTime(approved)}` : ''}</span></div>
+      </div>
+      <div class="endrep">— END OF REPORT —</div>
+    </div>
+    <div class="lh-foot"><img src="${IMG.bottom}" alt=""><div><b>SMARTER INTELLIGENCE · BETTER HEALTH · LASTING IMPACT</b><span>mitochron-ai.tech</span></div></div>
+  </article>`;
+}
+
+function emailText(o) {
+  const p = patients[o.patient_id], first = o.results[0];
+  const tests = [...new Set(o.results.map(r => { const c = cat(r.test_code, p.sex); return ['LDL','HDL','TG','TCHDL','TC'].includes(r.test_code) ? 'Fasting Lipid Profile' : ['HB','PCV','WBC','PLT'].includes(r.test_code) ? 'Full Blood Count' : ['HPSA','HPIGG'].includes(r.test_code) ? 'H. pylori (stool and serum)' : c.name; }))];
+  return `Dear ${p.full_name},
+
+Your laboratory results for the test(s) collected on ${ddmmyyyy(T(first.collected_at))} are now ready.
+
+Reference number: ${p.lab_patient_id}
+Test(s): ${tests.join(', ')}
+
+How to access your results:
+- Download the attached PDF. The password is your date of birth in DDMMYYYY format.
+- Or collect a printed copy at our front desk, ${LAB.working_days}, ${LAB.opening_time}–${LAB.closing_time}. Please bring a valid ID.
+
+Please share these results with the doctor who requested the test, who will explain them in the context of your health. If you have questions about the report itself, contact us on ${LAB.phone} or reply to this e-mail.
+
+Thank you for choosing MitochronAiLab.
+
+Warm regards,
+${LAB.assistant_name}
+Lab. Assistant, MitochronAiLab
+---
+CONFIDENTIAL: This e-mail contains private health information meant only for the person named above. If you received it in error, please delete it and let us know on ${LAB.phone}.`;
+}
+
+function openModal(html, focusSel) {
+  $('#modalInner').innerHTML = html; $('#modal').hidden = false; $('#modal').scrollTop = 0;
+  ($(focusSel || '#closeModal') || $('#modal')).focus();
+  $('#closeModal').onclick = closeModal;
+}
+function closeModal() { $('#modal').hidden = true; $('#drawer').hidden ? $('#view').focus() : ($('#closeSheet') || $('#view')).focus(); }
+
+// Opening a preview counts as the current user having seen this exact draft.
+function markPreviewed(o) {
+  if (o.report?.status !== 'draft' || o.report.previewedBy.has(state.user)) return;
+  o.report.previewedBy.add(state.user);
+  audit('report.previewed', `${patients[o.patient_id].lab_patient_id}: draft report opened for review`);
+  if (!$('#drawer').hidden) openOrder(o.id);
+}
+function approveAndSend(id) {
+  const o = orders.find(x => x.id === id), p = patients[o.patient_id];
+  if (!isChief() || o.report?.status !== 'draft' || !o.report.previewedBy.has(state.user)) return;
+  const at = new Date(NOW.getTime() + state.audit.length * 60000);
+  o.results.forEach(r => { r.status = 'released'; r.approved_by = state.user; r.approved_at = at.toISOString(); r.released_at = at.toISOString(); });
+  o.status = 'released'; o.report.status = 'final'; o.email = { status: 'sent', at: new Date(at.getTime() + 60000) };
+  audit('report.approved', `${p.lab_patient_id} ${p.full_name}: previewed report approved (${o.results.length} result(s))`);
+  audit('report.finalised', `Signed report ${fileName(o, p)} issued (DOCX + PDF)`, 'gaya');
+  audit('email.sent', `Result e-mail with ${fileName(o, p)} sent to ${p.email} (demo: nothing leaves this page)`, 'gaya');
+  toast('Approved and sent. In the demo, nothing leaves this page'); render();
+  if (!$('#drawer').hidden) openOrder(id);
+}
+function approveBar(o) {
+  return isChief() && o.report?.status === 'draft' ? `<button type="button" class="btn small primary" id="modalApprove">Approve and send</button>` : '';
+}
+function bindApproveBar(o, reopen) {
+  const b = $('#modalApprove'); if (b) b.onclick = () => { approveAndSend(o.id); reopen(o.id); };
+}
+function openReport(id) {
+  const o = orders.find(x => x.id === id), p = patients[o.patient_id];
+  markPreviewed(o);
+  openModal(`<div class="modalbar"><strong id="modalTitle">${o.status === 'released' ? 'Result report' : 'Report preview · draft by Gaya'} · ${p.lab_patient_id}</strong><span class="actions">${approveBar(o)}<button type="button" class="btn small" id="closeModal">Close</button></span></div>${reportHTML(o)}`);
+  bindApproveBar(o, openReport);
+}
+function openEmail(id) {
+  const o = orders.find(x => x.id === id), p = patients[o.patient_id];
+  markPreviewed(o);
+  openModal(`<div class="modalbar"><strong id="modalTitle">Result e-mail · ${o.email.status === 'sent' ? `sent ${fmt(o.email.at)}` : 'draft, waiting for the chief scientist'}</strong><span class="actions">${approveBar(o)}<button type="button" class="btn small" id="closeModal">Close</button></span></div>
+    <section class="mail" aria-label="E-mail draft">
+      <div class="mailhead"><span>From</span><div>${esc(LAB.assistant_name)}, ${esc(LAB.name)}</div><span>To</span><div class="mono">${esc(p.email)}</div><span>Subject</span><div><b>Your test results are ready · MITOCHRONAiLab</b></div></div>
+      <div class="mailbody">${esc(emailText(o))}</div>
+      <div class="attach"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+        <span style="flex:1 1 220px;min-width:0"><b>${esc(fileName(o, p))}</b><br><span class="sub">PDF · password-protected with the patient's date of birth</span></span></div>
+    </section>
+    <p class="modalbar" style="font-size:13px;opacity:.9">Attached report, as the patient will see it:</p>
+    ${reportHTML(o)}`);
+  bindApproveBar(o, openEmail);
+}
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) { e.stopImmediatePropagation(); closeModal(); } }, true);
+
+// ── Events ────────────────────────────────────────────────────────────────
+function bindView() {
+  document.querySelectorAll('[data-filter]').forEach(b => b.onclick = () => { state.filter = b.dataset.filter; render(); });
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+  document.querySelectorAll('[data-preview]').forEach(b => b.onclick = e => { e.stopPropagation(); openReport(b.dataset.preview); });
+  document.querySelectorAll('[data-preview]').forEach(b => b.onkeydown = e => e.stopPropagation());
+  document.querySelectorAll('tr[data-order]').forEach(tr => { tr.onclick = () => openOrder(tr.dataset.order); tr.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openOrder(tr.dataset.order); } }; });
+  document.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => { [state.qcTest, state.qcLevel] = b.dataset.qc.split('|'); render(); });
+  document.querySelectorAll('[data-resolve]').forEach(b => b.onclick = () => {
+    const e = exceptions.find(x => x.id === b.dataset.resolve), opt = e.options[+b.dataset.opt];
+    if (!isChief() && e.sev === 'crit') { toast('A chief scientist must decide critical holds'); return; }
+    e.status = 'resolved'; e.resolution = opt[1]; e.by = staff[state.user].display_name; e.at = new Date(NOW.getTime() + state.audit.length * 60000);
+    audit('discrepancy.resolved', `${e.patient.lab_patient_id} ${e.type}: ${opt[1]}`);
+    toast('Decision recorded'); render();
+  });
+  document.querySelectorAll('input[name="model"]').forEach(r => r.onchange = () => { state.model = r.value; audit('settings.model', `Gaya's model source set to: ${modelLabel(r.value)}`); toast('Model source updated'); render(); });
+  const c = $('#comments'); if (c) c.onchange = () => { state.comments = c.checked; audit('settings.comments', `Optional AI-drafted comments turned ${c.checked ? 'on' : 'off'}`); render(); };
+}
+function go(v) { state.view = v; try { localStorage.setItem('mcl.view', v); } catch (e) {} render(); $('#view').focus(); }
+$('#nav').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) go(b.dataset.view); });
+$('#drawer').addEventListener('click', e => { if (e.target.id === 'drawer') closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#drawer').hidden) closeSheet(); });
+$('#who').innerHTML = DATA.staff.map(s => `<option value="${s.id}">${esc(s.display_name)}${s.role === 'chief_scientist' ? ' (chief)' : ''}</option>`).join('');
+$('#who').onchange = e => { state.user = e.target.value; audit('session.switch', `Signed in as ${staff[state.user].display_name}`); toast(`Signed in as ${staff[state.user].display_name}`); render(); };
+$('#labName').textContent = DATA.labs[0].name;
+state.qcTest = 'FBG'; state.qcLevel = 'L2';
+try { const v = localStorage.getItem('mcl.view'); if (v && NAV.some(n => n[0] === v)) state.view = v; } catch (e) {}
+const loc = (location.hash || '').slice(1); if (NAV.some(n => n[0] === loc)) state.view = loc;
+render();
+</script>
