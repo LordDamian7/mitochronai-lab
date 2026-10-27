@@ -1,0 +1,18 @@
+Copyright (c) 2026 Obialo John Kelechi. All rights reserved.
+
+MitochronAi Lab is proprietary software. This repository is published so that
+its code can be read and evaluated, for example by employers, reviewers and
+prospective partners.
+
+You may view the source code and the documentation. You may not copy, modify,
+distribute, sublicense, sell, or use the software, in whole or in part, for any
+purpose without prior written permission from the copyright holder.
+
+Bundled third-party components keep their own licences, for example the IBM
+Plex fonts in web/public/fonts (SIL Open Font License 1.1).
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IT IS A
+PROTOTYPE, IS NOT A MEDICAL DEVICE, AND MUST NOT BE USED FOR CLINICAL
+DECISIONS OR WITH REAL PATIENT DATA.
+
+Contact: through https://github.com/LordDamian7

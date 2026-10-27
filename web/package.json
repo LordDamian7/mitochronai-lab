@@ -1,6 +1,6 @@
 {
   "name": "mitochronai-lab-web",
-  "version": "0.2.0",
+  "version": "0.5.1",
   "private": true,
   "description": "MitochronAi Lab: lab server web app (synthetic data only)",
   "scripts": {

@@ -6,6 +6,7 @@ import { activeUsers, requireUser, signOut } from "@/lib/auth";
 import { canSeeBusiness } from "@/lib/business";
 import { db } from "@/lib/db";
 import { ensureDrafts, heldOrders, lab } from "@/lib/lab";
+import { appInfo } from "@/lib/updater";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +49,12 @@ export default async function LabLayout({ children }: { children: React.ReactNod
           {canSeeBusiness(me) && <NavLink href="/pricing">Prices</NavLink>}
           {canSeeBusiness(me) && <NavLink href="/staff">Staff and roster</NavLink>}
           {me.role !== "scientist" && <NavLink href="/settings">Settings</NavLink>}
+          {me.role === "admin" && <NavLink href="/update">Software update</NavLink>}
         </nav>
         <div className="rail-foot">
           <span><strong>{L.assistant_name}</strong> · {MODEL[L.model_source]}</span>
           <span>Sandboxed to this lab&apos;s workspace</span>
+          <span>Version {appInfo().version}</span>
         </div>
       </aside>
       <div className="main">
